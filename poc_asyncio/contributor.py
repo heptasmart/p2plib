@@ -13,21 +13,6 @@ class Contributor(BaseNode):
         self.users = []
         
 
-    async def receive_coro(self,reader, writer):
-        while(True):
-            data = await reader.read(1000)      
-            #message = data.decode("utf8")
-            try:
-                event = pickle.loads(data)
-            except EOFError:
-                return
-            if event.name in self.event_handlers:
-                self.event_handlers[event.name](event)
-
-            addr = writer.get_extra_info('peername')
-            print("peername read")
-            print(f"Received {event.name!r} from {addr!r}")
-
     async def handle_connection(self,reader, writer):
         addr = writer.get_extra_info('peername')
         node = NodeInfos(addr[0], addr[1], writer, reader)

@@ -1,6 +1,9 @@
 import asyncio
 import hashlib
+import pickle
 from datetime import datetime
+
+from event import Event
 
 class NodeInfos:
     def __init__(self, ip, port, writer, reader):
@@ -15,16 +18,16 @@ class NodeInfos:
 
 class BaseNode:
 
-    
-
     async def heartbeat_coro(self):
 
         while(True):
             for node_id in self.nodes:
                 now = datetime.now()
-                if now - nodes[node_id].lastHeartbeat > 10000:
-                    print(node_id, " seems to be disconnected")
-                nodes[node_id].send(Event("heartbeat", {"beat" : True}))
+                
+                if (now - self.nodes[node_id].lastHeartbeat).total_seconds() > 10:
+                    print(node_id, "seems to be disconnected")
+                
+                await self.send(Event("heartbeat", {"beat" : True}), node_id)
             
             await asyncio.sleep(5)
 
@@ -35,9 +38,11 @@ class BaseNode:
 
     async def send(self, event, node_id):
 
+        print("Send", event.name, "to", self.nodes[node_id].ip, ':', self.nodes[node_id].port)
+
         data = pickle.dumps(event)
 
-        await self.nodes[node_id].writer.write(data)
+        self.nodes[node_id].writer.write(data)
 
         await self.nodes[node_id].writer.drain()
 
@@ -47,17 +52,17 @@ class BaseNode:
             data = await reader.read(1000)      
             try:
                 event = pickle.loads(data)
-            except EOFError:
+            except EOFError as e:
+                print(e)
                 continue
             if event.name in self.event_handlers:
 
                 addr = writer.get_extra_info('peername')
-                node_id = hashlib.sha224(addr(0) + str(addr(1))).hexdigest()
-                event.sender = self.nodes[node_ids]
-                self.event_handlers[event.name](event)
+                node_id = hashlib.sha224((addr[0] + str(addr[1])).encode()).hexdigest()
+                event.sender = node_id
+                await self.event_handlers[event.name](event)
 
             addr = writer.get_extra_info('peername')
-            print("peername read")
             print(f"Received {event.name!r} from {addr!r}")
 
     def on(self, event, coro): 
@@ -66,7 +71,7 @@ class BaseNode:
     def __init__(self):
         self.event_handlers = {}
         self.nodes = {}
-        asyncio.create_task(self.heartbeat_coro())
+        asyncio.get_event_loop().create_task(self.heartbeat_coro())  
         self.on("heartbeat", self.heartbeat_receive)
     
     

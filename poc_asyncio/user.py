@@ -11,6 +11,7 @@ class User(BaseNode):
         self.port = port
         self.event_handlers = {}
 
+
     async def add_contributor(self, address):
 
 
@@ -20,7 +21,7 @@ class User(BaseNode):
         node = NodeInfos(address, self.port, writer, reader)
         self.nodes[node.id] = node
 
-        asyncio.create_task(self.receive_coro(reader, writer))
+        
         #await asyncio.sleep(2)
         # event = Event("hello", {})
         # event2 = Event("bye", {})
@@ -59,5 +60,7 @@ if __name__ == "__main__":
     async def main():        
         u = User()
         await u.start("127.0.0.1")
+        
 
-    asyncio.run(main())
+    asyncio.get_event_loop().create_task(main())
+    asyncio.get_event_loop().run_forever()
