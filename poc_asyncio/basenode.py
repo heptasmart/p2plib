@@ -15,7 +15,6 @@ class NodeInfos:
         self.lastHeartbeat = datetime.now()
 
 
-
 class BaseNode:
 
     async def heartbeat_coro(self):
@@ -34,31 +33,55 @@ class BaseNode:
     async def heartbeat_receive(self, event):
 
         self.nodes[event.sender].lastHeartbeat = datetime.now()
-        
+
+    def get_node_id(self, addressInfos):
+        return hashlib.sha224((addressInfos[0] + str(addressInfos[1])).encode('utf8')).hexdigest()
+
+    async def disconnected_node(self, node_id):
+        writer = self.nodes[node_id].writer
+        addr = writer.get_extra_info('peername')
+        print(f"Disconnected from {addr!r}")
+        writer.close()
+        await writer.wait_closed()
+        self.nodes.pop(node_id)
+
 
     async def send(self, event, node_id):
 
-        print("Send", event.name, "to", self.nodes[node_id].ip, ':', self.nodes[node_id].port)
+        print("Send", event.name, "to", self.nodes[node_id].ip, ':', self.nodes[node_id].port, self.nodes[node_id].id)
 
         data = pickle.dumps(event)
 
-        self.nodes[node_id].writer.write(data)
+        writer = self.nodes[node_id].writer
 
-        await self.nodes[node_id].writer.drain()
+        try:
+            writer.write(data)
+
+            await writer.drain()
+        except (EOFError, ConnectionResetError) as e :
+            
+            addr = writer.get_extra_info('peername')
+            node_id = self.get_node_id(addr)
+            await self.disconnected_node(node_id)
+            
 
 
     async def receive_coro(self,reader, writer):
         while(True):
+
             data = await reader.read(1000)      
             try:
                 event = pickle.loads(data)
-            except EOFError as e:
-                print(e)
-                continue
+            except (EOFError, ConnectionResetError) as e:
+                addr = writer.get_extra_info('peername')
+                node_id = self.get_node_id(addr)
+                await self.disconnected_node(node_id)
+                return
+            
             if event.name in self.event_handlers:
 
                 addr = writer.get_extra_info('peername')
-                node_id = hashlib.sha224((addr[0] + str(addr[1])).encode()).hexdigest()
+                node_id = hashlib.sha224((addr[0] + str(addr[1])).encode('utf8')).hexdigest()
                 event.sender = node_id
                 await self.event_handlers[event.name](event)
 

@@ -17,6 +17,7 @@ class Contributor(BaseNode):
         addr = writer.get_extra_info('peername')
         node = NodeInfos(addr[0], addr[1], writer, reader)
         self.nodes[node.id] = node
+        print(node.ip, node.port, node.id)
         await asyncio.create_task(self.receive_coro(reader, writer))
 
     async def start(self):

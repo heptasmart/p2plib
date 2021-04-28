@@ -9,7 +9,6 @@ class User(BaseNode):
     def __init__(self, port=8888):
         super().__init__()
         self.port = port
-        self.event_handlers = {}
 
 
     async def add_contributor(self, address):
@@ -20,6 +19,8 @@ class User(BaseNode):
 
         node = NodeInfos(address, self.port, writer, reader)
         self.nodes[node.id] = node
+        print(node.ip, node.port, node.id)
+        asyncio.get_event_loop().create_task(self.receive_coro(reader, writer))
 
         
         #await asyncio.sleep(2)
@@ -45,9 +46,7 @@ class User(BaseNode):
             addr = writer.get_extra_info('peername')
             print(f"Received {event.name!r} from {addr!r}")"""
 
-    def on(self, event, coro): 
-        self.event_handlers[event] = coro
-
+    
     async def start(self, server):
         await self.add_contributor(server)
         
