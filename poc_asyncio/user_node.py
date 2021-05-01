@@ -4,7 +4,7 @@ from basenode import BaseNode, NodeInfos
 import pickle
 
 
-class User(BaseNode):
+class UserNode(BaseNode):
     """
     This class adds some specific methods used by users. 
     It inherits the BaseNode class for receiving and sending messages, and maintaining connections.
@@ -18,13 +18,9 @@ class User(BaseNode):
         """
         super().__init__()
         self.port = port
-        self.on("available_contributors", self.available_contributors_coro)
+        #self.on("available_contributors", self.available_contributors_coro)
         self.relay_address = relay_address
 
-    def available_contributors_coro(self, event):
-
-        for node_id in event.data.keys:
-            await self.add_contributor(event.data[node_id].ip)
 
     async def add_contributor(self, address):
 
@@ -43,14 +39,11 @@ class User(BaseNode):
         asyncio.get_event_loop().create_task(self.receive_coro(reader, writer))
 
 
-    async def start(self, server):
+    async def start(self):
         """Starts the User node."""
         #await self.add_contributor(server)
-        relay_reader, relay_writer = await asyncio.open_connection(self.relay_address, 8889)
-        relay = NodeInfos(relay_address, 8889, relay_writer, relay_reader)
-        self.nodes[relay.id] = relay
-
-        self.send(Event("user_connected", {}), relay.id)
+        #await self.connect_relay(self.relay_address)
+        
 
 
 
@@ -63,7 +56,7 @@ if __name__ == "__main__":
     async def main():
         """
         """
-        u = User()
+        u = UserNode("127.0.0.1")
         await u.start("127.0.0.1")
 
     asyncio.get_event_loop().create_task(main())

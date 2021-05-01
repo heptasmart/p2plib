@@ -43,11 +43,7 @@ class ContributorNode(BaseNode):
             self.handle_connection, self.interface, self.port)
         self.server = server
         
-        relay_reader, relay_writer = await asyncio.open_connection(relay_address, 8889)
-        relay = NodesInfos(relay_address, 8889, relay_writer, relay_reader)
-        self.nodes[relay.id] = relay
-
-        self.send(Event("contributor_available", {}), relay.id)
+        #await self.connect_relay(self.relay_address)
 
         async with server:
             await server.serve_forever()
@@ -60,7 +56,7 @@ if __name__ == "__main__":
     """
 
     async def main():
-        c = ContributorNode("")
+        c = ContributorNode("127.0.0.1")
         await c.start()
 
     asyncio.run(main())
