@@ -2,6 +2,7 @@ from user_node import UserNode
 import asyncio
 from event import Event
 import sys
+import requests
 
 class User():
 
@@ -11,28 +12,21 @@ class User():
         else:
             self.acceptedWorkers.remove(event.sender)
 
-    async def sendProposal(self):
+    async def send_proposal(self):
         
         for node_id in self.node.nodes.keys:
             await self.node.send(Event("job_proposal", {}), node_id)
 
-    async def available_contributors_handler(self, event : Event):
-
-        for node_id in event.data:
-            await self.node.add_contributor(event.data[node_id]["ip"])
-        print(event.data)
-        print(self.node.nodes)
 
     async def start(self):
 
-        self.node.on("available_contributors", self.available_contributors_handler)
-
-        await self.node.connect_relay(self.node.relay_address)
-        await self.node.send(Event("user_connected", {}), self.node.relay_id)
+        contributors = requests.get("http://" +self.relay_address + ":8080").json()
+        for node_id in contributors:
+            await self.node.add_contributor(contributors[node_id]["ip"])
 
     def __init__(self,relay_address : str):
-        self.node = UserNode(relay_address)
-        
+        self.node = UserNode()
+        self.relay_address = relay_address
         asyncio.create_task(self.node.start()) 
         self.acceptedWorkers=[]
         self.node.on('job_reponse',self.job_response_handler)
@@ -42,7 +36,7 @@ if __name__ == "__main__":
 
     relay_host = "127.0.0.1"
 
-    if len(sys.argv) > 0:
+    if len(sys.argv) > 1:
         relay_host = sys.argv[1]
 
     async def main():

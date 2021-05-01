@@ -7,6 +7,7 @@ except ImportError:
     print("Need to be on windows to import this module")
 import platform
 import sys
+import requests
 
 class Contributor():
 
@@ -24,17 +25,17 @@ class Contributor():
 
     async def start(self):
 
-        await self.node.connect_relay(self.node.relay_address)
-        await self.node.send(Event("contributor_available", {}), self.node.relay_id)
+        requests.post("http://" + self.relay_address + ":8080")
 
     """Constructor for the contributor class"""
 
     def __init__(self, relay_address: str):
-        self.node = ContributorNode(relay_address)
+        self.node = ContributorNode()
         asyncio.create_task(self.node.start())
         self.working = False
         self.node.on('job_proposal', self.job_proposal_handler)
         self.systemInfo = {}
+        self.relay_address = relay_address
 
     """getSystemInfo add cpu, ram and gpu specs to systemInfo"""
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
     relay_host = "127.0.0.1"
 
-    if len(sys.argv) > 0:
+    if len(sys.argv) > 1:
         relay_host = sys.argv[1]
 
     async def main():

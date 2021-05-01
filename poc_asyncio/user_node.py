@@ -3,14 +3,13 @@ from event import Event
 from basenode import BaseNode, NodeInfos
 import pickle
 
-
 class UserNode(BaseNode):
     """
     This class adds some specific methods used by users. 
     It inherits the BaseNode class for receiving and sending messages, and maintaining connections.
     """
 
-    def __init__(self, relay_address, port=8888):
+    def __init__(self, port=8888):
 
         """
         Constructor for the User class.
@@ -18,8 +17,8 @@ class UserNode(BaseNode):
         """
         super().__init__()
         self.port = port
-        #self.on("available_contributors", self.available_contributors_coro)
-        self.relay_address = relay_address
+       
+        
 
 
     async def add_contributor(self, address):

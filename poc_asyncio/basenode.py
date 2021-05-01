@@ -119,12 +119,6 @@ class BaseNode:
         """Add the coro as the event handler for 'event'"""
         self.event_handlers[event] = coro
     
-    async def connect_relay(self, relay_address, relay_port=8889):
-        relay_reader, relay_writer = await asyncio.open_connection(relay_address, relay_port)
-        relay = NodeInfos(relay_address, relay_port, relay_writer, relay_reader)
-        self.nodes[relay.id] = relay
-        asyncio.get_event_loop().create_task(self.receive_coro(relay_reader, relay_writer))
-        self.relay_id = relay.id
 
 
     def __init__(self):
