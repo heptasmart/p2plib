@@ -6,6 +6,7 @@ try:
 except ImportError:
     print("Need to be on windows to import this module")
 import platform
+import sys
 
 class Contributor():
 
@@ -54,7 +55,7 @@ if __name__ == "__main__":
 
     relay_host = "127.0.0.1"
 
-    if len(argv) > 0:
+    if len(sys.argv) > 0:
         relay_host = sys.argv[1]
 
     async def main():
