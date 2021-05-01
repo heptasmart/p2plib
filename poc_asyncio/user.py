@@ -12,22 +12,17 @@ class User():
         else:
             self.acceptedWorkers.remove(event.sender)
 
-    async def sendProposal(self):
+    async def send_proposal(self):
         
         for node_id in self.node.nodes.keys:
             await self.node.send(Event("job_proposal", {}), node_id)
 
-    async def available_contributors_handler(self, event : Event):
-
-        for node_id in event.data:
-            await self.node.add_contributor(event.data[node_id]["ip"])
-        print(event.data)
-        print(self.node.nodes)
 
     async def start(self):
 
         contributors = requests.get("http://" +self.relay_address + ":8080").json()
-        print(contributors)
+        for node_id in contributors:
+            await self.node.add_contributor(contributors[node_id]["ip"])
 
     def __init__(self,relay_address : str):
         self.node = UserNode()
