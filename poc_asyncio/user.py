@@ -2,6 +2,7 @@ from user_node import UserNode
 import asyncio
 from event import Event
 import sys
+import requests
 
 class User():
 
@@ -25,14 +26,12 @@ class User():
 
     async def start(self):
 
-        self.node.on("available_contributors", self.available_contributors_handler)
-
-        await self.node.connect_relay(self.node.relay_address)
-        await self.node.send(Event("user_connected", {}), self.node.relay_id)
+        contributors = requests.get("http://" +self.relay_address + ":8080").json()
+        print(contributors)
 
     def __init__(self,relay_address : str):
-        self.node = UserNode(relay_address)
-        
+        self.node = UserNode()
+        self.relay_address = relay_address
         asyncio.create_task(self.node.start()) 
         self.acceptedWorkers=[]
         self.node.on('job_reponse',self.job_response_handler)
@@ -42,7 +41,7 @@ if __name__ == "__main__":
 
     relay_host = "127.0.0.1"
 
-    if len(argv) > 0:
+    if len(sys.argv) > 1:
         relay_host = sys.argv[1]
 
     async def main():

@@ -12,7 +12,7 @@ class ContributorNode(BaseNode):
     It inherits the BaseNode class for receiving and sending messages, and maintaining connections.
     """
 
-    def __init__(self,  relay_address, port=8888, interface="0.0.0.0"):
+    def __init__(self, port=8888, interface="0.0.0.0"):
         """
         Constructor for the Contributor class.
         Calls super-constructor and sets port, interface, relay address and initializes user list.
@@ -20,7 +20,6 @@ class ContributorNode(BaseNode):
         super().__init__()
         self.port = port
         self.interface = interface
-        self.relay_address = relay_address
 
 
     async def handle_connection(self, reader, writer):
