@@ -9,9 +9,10 @@ import platform
 import sys
 import requests
 
+
 class Contributor():
 
-    async def job_proposal_handler(self, event):
+    async def job_proposal_handler(self, event: Event):
         if self.working == True:
             nodeId = event.sender
             await self.node.send(Event("job_reponse", {'accepted': False}), nodeId)
@@ -19,13 +20,34 @@ class Contributor():
         else:
             nodeId = event.sender
             await self.node.send(Event("job_reponse", {'accepted': True}), nodeId)
-            getSystemInfo()
-            self.node.send(
+            # getSystemInfo()
+            await self.node.send(
                 Event("system_informatons", self.systemInfo), nodeId)
+            self.current_master = nodeId
+
+    async def job_parameters_handler(self, event: Event):
+
+        if event.sender == self.current_master:
+            self.swarm_token = event.data["swarm_token"]
+            self.network_name = event.data["network_name"]
+            self.docker_name = event.data["docker_name"]
+
+            # TODO
+            # set-up docker and launch spark-woker
+
+            await self.send_worker_ready()
+
+    async def send_worker_ready(self):
+
+        await self.node.send(Event("worker_ready", {}), self.current_master)
 
     async def start(self):
 
         requests.post("http://" + self.relay_address + ":8080")
+
+    async def handle_deconnection(self, node_id):
+        print("Disconnedted from master, available again")
+        self.working = False
 
     """Constructor for the contributor class"""
 
@@ -34,8 +56,14 @@ class Contributor():
         asyncio.create_task(self.node.start())
         self.working = False
         self.node.on('job_proposal', self.job_proposal_handler)
+        self.node.on("job_parameters", self.job_parameters_handler)
         self.systemInfo = {}
         self.relay_address = relay_address
+        self.current_master = ""
+        self.swarm_token = ""
+        self.network_name = ""
+        self.docker_name = ""
+        self.node.handle_deconnection = self.handle_deconnection
 
     """getSystemInfo add cpu, ram and gpu specs to systemInfo"""
 
@@ -49,7 +77,7 @@ class Contributor():
 
             self.systemInfo['processor'] = platform.processor()
             self.systemInfo['ram'] = str(
-            round(psutil.virtual_memory().total / (1024.0 ** 3)))+" GB"
+                round(psutil.virtual_memory().total / (1024.0 ** 3)))+" GB"
 
 
 if __name__ == "__main__":

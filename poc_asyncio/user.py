@@ -4,33 +4,67 @@ from event import Event
 import sys
 import requests
 
+
 class User():
 
-    async def job_response_handler(self,event : Event):
-        if event.data['accepted']==True:
-            self.acceptedWorkers.append(event.sender)
+    async def job_response_handler(self, event: Event):
+        if event.data['accepted'] == True:
+            self.accepted_workers[event.sender] = {
+                "accepted": True, "ready": False}
+            await self.send_parameters()
         else:
-            self.acceptedWorkers.remove(event.sender)
+            self.accepted_workers.pop(event.sender, None)
 
     async def send_proposal(self):
-        
-        for node_id in self.node.nodes.keys:
+
+        for node_id in self.node.nodes:
             await self.node.send(Event("job_proposal", {}), node_id)
 
+    async def send_parameters(self):
+
+        for node_id in self.accepted_workers:
+            await self.node.send(Event("job_parameters", {"swarm_token": self.swarm_token, "network_name": self.network_name, "docker_name": node_id}), node_id)
+
+    async def worker_ready_handler(self, event: Event):
+
+        if event.sender in self.accepted_workers:
+            self.accepted_workers[event.sender]["ready"] = True
+
+        everyone_is_ready = True
+
+        for node_id in self.accepted_workers:
+            if self.accepted_workers[node_id] == False:
+                everyone_is_ready = False
+                break
+
+        if everyone_is_ready:
+            print("Every worker is ready. Spark master instance is accesible at :")
+
+    async def handle_deconnection(self, node_id):
+        print("Disconneted from", node_id, ".Attempting to reconnected")
 
     async def start(self):
 
-        contributors = requests.get("http://" +self.relay_address + ":8080").json()
+        contributors = requests.get(
+            "http://" + self.relay_address + ":8080").json()
         for node_id in contributors:
             await self.node.add_contributor(contributors[node_id]["ip"])
 
-    def __init__(self,relay_address : str):
+        await self.send_proposal()
+        # TODO
+        # Start up the docker image, create swarm, create network
+
+    def __init__(self, relay_address: str):
         self.node = UserNode()
         self.relay_address = relay_address
-        asyncio.create_task(self.node.start()) 
-        self.acceptedWorkers=[]
-        self.node.on('job_reponse',self.job_response_handler)
-        #asyncio.create_task(self.sendProposal())
+        asyncio.create_task(self.node.start())
+        self.accepted_workers = {}
+        self.node.on('job_reponse', self.job_response_handler)
+        self.node.on("worker_ready", self.worker_ready_handler)
+        self.swarm_token = ""
+        self.network_name = ""
+        self.node.handle_deconnection = self.handle_deconnection
+
 
 if __name__ == "__main__":
 

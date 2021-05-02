@@ -16,10 +16,8 @@ class UserNode(BaseNode):
         Calls super-constructor and sets port.
         """
         super().__init__()
-        self.port = port
-       
-        
-
+        self.port = port       
+    
 
     async def add_contributor(self, address):
 

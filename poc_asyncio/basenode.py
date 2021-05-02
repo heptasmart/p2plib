@@ -63,6 +63,8 @@ class BaseNode:
         print(f"Disconnected from {addr!r}")
         writer.close()
         await writer.wait_closed()
+        if self.handle_deconnection:
+            await self.handle_deconnection(node_id)
         self.nodes.pop(node_id)
 
     async def send(self, event, node_id):
@@ -107,19 +109,16 @@ class BaseNode:
             if event.name in self.event_handlers:
 
                 addr = writer.get_extra_info('peername')
+                print(f"Received {event.name!r} from {addr!r}")
+
                 node_id = hashlib.sha224(
                     (addr[0] + str(addr[1])).encode('utf8')).hexdigest()
                 event.sender = node_id
                 await self.event_handlers[event.name](event)
 
-            addr = writer.get_extra_info('peername')
-            print(f"Received {event.name!r} from {addr!r}")
-
     def on(self, event, coro):
         """Add the coro as the event handler for 'event'"""
         self.event_handlers[event] = coro
-    
-
 
     def __init__(self):
         self.event_handlers = {}
