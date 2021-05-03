@@ -3,6 +3,7 @@ import asyncio
 from event import Event
 import sys
 import requests
+import docker
 
 
 class User():
@@ -23,7 +24,7 @@ class User():
     async def send_parameters(self):
 
         for node_id in self.accepted_workers:
-            await self.node.send(Event("job_parameters", {"swarm_token": self.swarm_token, "network_name": self.network_name, "docker_name": node_id}), node_id)
+            await self.node.send(Event("job_parameters", {"advertise_ip" : self.node.nodes[node_id].ip], "swarm_token": self.client.swarm.attrs['JoinTokens']['Worker'], "network_name": "spark-net", "docker_name": node_id}), node_id)
 
     async def worker_ready_handler(self, event: Event):
 
@@ -53,8 +54,22 @@ class User():
         await self.send_proposal()
         # TODO
         # Start up the docker image, create swarm, create network
+        
+        self.client.swarm.init(advertise_addr=self.ADVERTISE_IP, listen_addr=self.LISTEN_IP)
+        self.client.networks.create(name="spark-net", driver="overlay", attachable=True)
+        self.client.containers.run(image='bde2020/spark-master:3.1.1-hadoop3.2',
+                      detach=True,
+                      name="spark-master",
+                      environment=["SPARK_PUBLIC_DNS=" + self.ADVERTISE_IP, 
+                                   "SPARK_MASTER_HOST=spark-master"],
+                      ports={
+                          		8080:8080,
+                          		4040:4040
+                            },
+                      hostname="spark-master",
+                      network="spark-net")
 
-    def __init__(self, relay_address: str):
+    def __init__(self, relay_address: str, advertise_ip:str, listen_ip:str):
         self.node = UserNode()
         self.relay_address = relay_address
         asyncio.create_task(self.node.start())
@@ -63,15 +78,21 @@ class User():
         self.node.on("worker_ready", self.worker_ready_handler)
         self.swarm_token = ""
         self.network_name = ""
+        self.ADVERTISE_IP = advertise_ip
+        self.LISTEN_IP = listen_ip
         self.node.handle_deconnection = self.handle_deconnection
+        self.client=docker.from_env()
 
 
 if __name__ == "__main__":
 
     relay_host = "127.0.0.1"
-
+    advertise_ip = ""
+    listen_ip = ""
     if len(sys.argv) > 1:
-        relay_host = sys.argv[1]
+        relay_host = sys.argv[1] 
+        advertise_ip = sys.argv[2]
+        listen_ip = sys.argv[3]
 
     async def main():
         """
