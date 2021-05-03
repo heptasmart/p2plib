@@ -98,7 +98,7 @@ class Contributor():
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description='Worker Information')
-	parser.add_argument('--nickname', dest='nickname', type=str, help='Nickname of the future slav... euh worker sorry')
+	parser.add_argument('--nickname', dest='nickname', type=str, help='Nickname of the future slav... euh worker sorry', default="")
 	parser.add_argument('--relay_host', dest='relay_host', type=str, help='IP of the relay host', default='127.0.0.1')
 	parser.add_argument('--listen_ip', dest='listen_ip', type=str, help='Listen IP', default="")
 
