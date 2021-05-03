@@ -56,10 +56,10 @@ class User():
         # Start up the docker image, create swarm, create network
         self.client.swarm.leave(force=True)
         try:
-		self.client.containers.list(filters ={ "name": "spark-master"})[0].kill()
+            self.client.containers.list(filters ={ "name": "spark-master"})[0].kill()
         except :
-		print('got no image to kill')
-	self.client.swarm.init(advertise_addr=self.ADVERTISE_IP, listen_addr=self.LISTEN_IP)
+            print('got no image to kill')
+        self.client.swarm.init(advertise_addr=self.ADVERTISE_IP, listen_addr=self.LISTEN_IP)
         self.client.networks.create(name="spark-net", driver="overlay", attachable=True)
         self.client.containers.run(image='bde2020/spark-master:3.1.1-hadoop3.2',
                       detach=True,
