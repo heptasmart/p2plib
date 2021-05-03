@@ -40,7 +40,7 @@ class User():
                 break
 
         if everyone_is_ready:
-            print("Every worker is ready. Spark master instance is accesible at :")
+            print("Every worker is ready. Spark master instance is accesible at : spark://localhost:7077")
 
     async def handle_deconnection(self, node_id):
         print("Disconneted from", node_id, ".Attempting to reconnected")
@@ -48,7 +48,7 @@ class User():
     async def start(self):
 
         contributors = requests.get(
-            "http://" + self.relay_address + ":8888").json()
+            "http://" + self.relay_address + ":8889").json()
         for node_id in contributors:
             await self.node.add_contributor(contributors[node_id]["ip"])
 
@@ -69,7 +69,8 @@ class User():
                                    "SPARK_MASTER_HOST=spark-master"],
                       ports={
                           		8080:8080,
-                          		4040:4040
+                          		4040:4040;
+                                7077:7077
                             },
                       hostname="spark-master",
                       network="spark-net",

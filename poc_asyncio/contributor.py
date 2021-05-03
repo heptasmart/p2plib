@@ -56,7 +56,7 @@ class Contributor():
         await self.node.send(Event("worker_ready", {}), self.current_master)
 
     async def start(self):
-        requests.post("http://" + self.relay_address + ":8888", json=self.systemInfo)
+        requests.post("http://" + self.relay_address + ":8889", json=self.systemInfo)
 
     async def handle_deconnection(self, node_id):
         print("Disconnedted from master, available again")
