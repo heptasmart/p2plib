@@ -24,7 +24,7 @@ class User():
     async def send_parameters(self):
 
         for node_id in self.accepted_workers:
-            await self.node.send(Event("job_parameters", {"advertise_ip" : self.node.nodes[node_id].ip], "swarm_token": self.client.swarm.attrs['JoinTokens']['Worker'], "network_name": "spark-net", "docker_name": node_id}), node_id)
+            await self.node.send(Event("job_parameters", {"advertise_ip" : self.node.nodes[node_id].ip, "swarm_token": self.client.swarm.attrs['JoinTokens']['Worker'], "network_name": "spark-net", "docker_name": node_id}), node_id)
 
     async def worker_ready_handler(self, event: Event):
 
