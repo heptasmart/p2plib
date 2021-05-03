@@ -19,9 +19,6 @@ class Contributor():
         else:
             nodeId = event.sender
             await self.node.send(Event("job_reponse", {'accepted': True}), nodeId)
-            getSystemInfo()
-            await self.node.send(
-                Event("system_informatons", self.systemInfo), nodeId)
             self.current_master = nodeId
 
     async def job_parameters_handler(self, event: Event):
