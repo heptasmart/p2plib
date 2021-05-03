@@ -36,12 +36,12 @@ class Contributor():
 
             self.client.swarm.leave(force=True)
             try:
-                self.client.containers.list(filters={"name": self.docker_name})[0].kill()
+                self.client.containers.list(filters={"name": self.docker_name})[0].remove(force=True)
             except:
                 print('nothing to kill')
 
             self.client.swarm.join(remote_addrs=[self.node.nodes[event.sender].ip],
-                                   join_token=swarm_token, advertise_addr=advertise_ip, listen_addr=self.LISTEN_IP)
+                                   join_token=self.swarm_token, advertise_addr=advertise_ip, listen_addr=self.LISTEN_IP)
             self.client.containers.run(image='bde2020/spark-worker:3.1.1-hadoop3.2',
                                        detach=True,
                                        name="spark-worker",
@@ -50,7 +50,8 @@ class Contributor():
                                         8081: 8081
                           },
                 hostname=self.docker_name,
-                network="spark-net")
+                network="spark-net",
+                auto_remove=True)
             await self.send_worker_ready()
 
     async def send_worker_ready(self):
