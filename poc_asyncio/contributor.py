@@ -1,11 +1,8 @@
 from contributor_node import ContributorNode
 import asyncio
 from event import Event
-try:
-    import wmi
-except ImportError:
-    print("Need to be on windows to import this module")
 import platform
+import psutil
 import sys
 import requests
 
@@ -20,7 +17,7 @@ class Contributor():
         else:
             nodeId = event.sender
             await self.node.send(Event("job_reponse", {'accepted': True}), nodeId)
-            # getSystemInfo()
+            getSystemInfo()
             await self.node.send(
                 Event("system_informatons", self.systemInfo), nodeId)
             self.current_master = nodeId
@@ -42,8 +39,7 @@ class Contributor():
         await self.node.send(Event("worker_ready", {}), self.current_master)
 
     async def start(self):
-
-        requests.post("http://" + self.relay_address + ":8080")
+        requests.post("http://" + self.relay_address + ":8080", json=self.systemInfo)
 
     async def handle_deconnection(self, node_id):
         print("Disconnedted from master, available again")
@@ -67,17 +63,23 @@ class Contributor():
 
     """getSystemInfo add cpu, ram and gpu specs to systemInfo"""
 
+    
     def getSystemInfo(self):
-        if platform.system() == "Windows":
-            computer = wmi.WMI()
-            computer_info = computer.Win32_ComputerSystem()[0]
-            os_info = computer.Win32_OperatingSystem()[0]
-            proc_info = computer.Win32_Processor()[0]
-            gpu_info = computer.Win32_VideoController()[0]
+        self.systemInfo['processor']=platform.processor()
+        self.systemInfo['cpu_core']=psutil.cpu_count(logical=False)
+        self.systemInfo['cpu_thread']=psutil.cpu_count(logical=True)
+        
+        cpu_frequency = psutil.cpu_freq()
+        self.systemInfo['cpu_max_freq_mghz']=cpu_frequency.current
+        self.systemInfo['cpu_min_freq_mghz']=cpu_frequency.min
 
-            self.systemInfo['processor'] = platform.processor()
-            self.systemInfo['ram'] = str(
-                round(psutil.virtual_memory().total / (1024.0 ** 3)))+" GB"
+        battery = psutil.sensors_battery()
+        self.systemInfo['battery_percentage']=round(battery.percent, 1)
+        #Par default, cette fonctionnalité est désactivé sur windows10, donc pas utilisé ici.
+        #self.systemInfo['battery_time_left_hr']=round(battery.secsleft,2)
+        self.systemInfo['power_pluged']=battery.power_plugged
+        
+        self.systemInfo['total_ram_gb']=round(psutil.virtual_memory().total/(1024.0 **3))
 
 
 if __name__ == "__main__":
@@ -91,7 +93,10 @@ if __name__ == "__main__":
         """
         """
         c = Contributor(relay_host)
+        c.getSystemInfo()
+        print(c.systemInfo)
         await c.start()
+        
 
     asyncio.get_event_loop().create_task(main())
     asyncio.get_event_loop().run_forever()

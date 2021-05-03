@@ -35,8 +35,9 @@ class Relay():
         # self.on("contributor_available", self.contributor_available_coro)
         # self.on("user_connected", self.user_connected_coro)
 
-    def add_contributor(self,ip):
+    def add_contributor(self,ip,json):
         self.contributors[ip] = {"ip" : ip}
+        self.contributors[ip]["systemInfo"]=json
 
     
 
@@ -72,14 +73,16 @@ if __name__ == "__main__":
 
     r = Relay()
 
-    @route("/")
+    @get("/")
     def send_contributors():
         return r.contributors
 
     @post("/")
     def handle_contributor():
         ip = request.environ.get('REMOTE_ADDR')
-        r.add_contributor(ip)
+        systemInfo=request.json
+        r.add_contributor(ip,systemInfo)
+        print(r.contributors)
         
-
+    print('r')
     run(host='0.0.0.0', port=8080, debug=True)
