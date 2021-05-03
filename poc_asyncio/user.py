@@ -54,7 +54,8 @@ class User():
         await self.send_proposal()
         # TODO
         # Start up the docker image, create swarm, create network
-        
+        self.client.swarm.leave(force=True)
+        self.client.containers.list(filters ={ "name": "spark-master"})[0].stop()
         self.client.swarm.init(advertise_addr=self.ADVERTISE_IP, listen_addr=self.LISTEN_IP)
         self.client.networks.create(name="spark-net", driver="overlay", attachable=True)
         self.client.containers.run(image='bde2020/spark-master:3.1.1-hadoop3.2',
@@ -82,6 +83,8 @@ class User():
         self.LISTEN_IP = listen_ip
         self.node.handle_deconnection = self.handle_deconnection
         self.client=docker.from_env()
+        
+
 
 
 if __name__ == "__main__":
