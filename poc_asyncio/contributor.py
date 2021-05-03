@@ -52,7 +52,7 @@ class Contributor():
 
     async def start(self):
 
-        requests.post("http://" + self.relay_address + ":8080")
+        requests.post("http://" + self.relay_address + ":8888")
 
     async def handle_deconnection(self, node_id):
         print("Disconnedted from master, available again")
