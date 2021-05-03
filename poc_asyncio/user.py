@@ -69,7 +69,7 @@ class User():
                                    "SPARK_MASTER_HOST=spark-master"],
                       ports={
                           		8080:8080,
-                          		4040:4040;
+                          		4040:4040,
                                 7077:7077
                             },
                       hostname="spark-master",
