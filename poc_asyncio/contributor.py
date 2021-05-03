@@ -93,7 +93,7 @@ class Contributor():
         self.systemInfo['cpu_thread']=psutil.cpu_count(logical=True)
         
         cpu_frequency = ps
-    util.cpu_freq()
+        util.cpu_freq()
         self.systemInfo['cpu_max_freq_mghz']=cpu_frequency.current
         self.systemInfo['cpu_min_freq_mghz']=cpu_frequency.min
 
