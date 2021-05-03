@@ -35,12 +35,12 @@ class Contributor():
             advertise_ip = event.data["advertise_ip"]
             # TODO
             # set-up docker and launch spark-woker
-	
-            self.client.swarm.leave(force=True)
-        try:
-		self.client.containers.list(filters ={ "name": self.docker_name})[0].kill()
-        except:
-		print('nothing to kill')
+
+            self.client.swarm.leave(force=True) 
+		try:
+			self.client.containers.list(filters ={ "name": self.docker_name})[0].kill()
+		except:
+	        	print('nothing to kill')
 
             self.client.swarm.join(remote_addrs=[self.node.nodes[event.sender].ip], join_token=swarm_token, advertise_addr=advertise_ip, listen_addr=self.LISTEN_IP)
             self.client.containers.run(image='bde2020/spark-worker:3.1.1-hadoop3.2',
