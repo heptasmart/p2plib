@@ -57,7 +57,7 @@ class User():
         # Start up the docker image, create swarm, create network
         self.client.swarm.leave(force=True)
         try:
-            self.client.containers.list(filters ={ "name": "spark-master"})[0].remove(force=True)
+            self.client.containers.list(filters ={ "name": "spark-master"}, all=True)[0].remove(force=True)
         except :
             print('got no image to kill')
         self.client.swarm.init(advertise_addr=self.ADVERTISE_IP, listen_addr=self.LISTEN_IP)

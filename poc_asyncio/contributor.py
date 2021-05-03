@@ -33,7 +33,7 @@ class Contributor():
 
             self.client.swarm.leave(force=True)
             try:
-                self.client.containers.list(filters={"name": self.docker_name})[0].remove(force=True)
+                self.client.containers.list(filters={"name": self.docker_name}, all=True)[0].remove(force=True)
             except:
                 print('nothing to kill')
 
@@ -41,7 +41,7 @@ class Contributor():
                                    join_token=self.swarm_token, advertise_addr=advertise_ip, listen_addr=self.LISTEN_IP)
             self.client.containers.run(image='bde2020/spark-worker:3.1.1-hadoop3.2',
                                        detach=True,
-                                       name="spark-worker",
+                                       name=self.docker_name,
                                        environment=["SPARK_PUBLIC_DNS=" + self.node.nodes[event.sender].ip],
                 ports={
                                         8081: 8081
