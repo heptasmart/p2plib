@@ -127,7 +127,7 @@ if __name__ == "__main__":
     async def main():
         """
         """
-        c = Contributor(relay_host)
+        c = Contributor(relay_host, listen_ip, nickname)
         c.getSystemInfo()
         print(c.systemInfo)
         await c.start()
