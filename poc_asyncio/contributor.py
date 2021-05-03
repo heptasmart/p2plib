@@ -1,5 +1,6 @@
 from contributor_node import ContributorNode
 import asyncio
+import argparse
 from event import Event
 try:
     import wmi
@@ -62,7 +63,7 @@ class Contributor():
 
     """Constructor for the contributor class"""
 
-    def __init__(self, relay_address: str, listen_ip:str):
+    def __init__(self, relay_address: str, listen_ip:str, nickname: str):
         self.node = ContributorNode()
         asyncio.create_task(self.node.start())
         self.working = False
@@ -74,6 +75,7 @@ class Contributor():
         self.swarm_token = ""
         self.network_name = "spark-net"
         self.docker_name = ""
+        self.nickname = ""
         self.node.handle_deconnection = self.handle_deconnection
         self.client=docker.from_env()
         self.LISTEN_IP=listen_ip
@@ -95,17 +97,23 @@ class Contributor():
 
 if __name__ == "__main__":
 
-    relay_host = "127.0.0.1"
-    listen_ip = ""
-    if len(sys.argv) > 1:
-        relay_host = sys.argv[1]
-        listen_ip = sys.argv[2]
+	parser = argparse.ArgumentParser(description='Worker Information')
+	parser.add_argument('--nickname', dest='nickname', type=str, help='Nickname of the future slav... euh worker sorry', default="")
+	parser.add_argument('--relay_host', dest='relay_host', type=str, help='IP of the relay host', default='127.0.0.1')
+	parser.add_argument('--listen_ip', dest='listen_ip', type=str, help='Listen IP', default="")
 
-    async def main():
-        """
-        """
-        c = Contributor(relay_host, listen_ip)
-        await c.start()
+	args = parser.parse_args()
+	relay_host = args.relay_host
+	nickname = args.nickname
+	listen_ip = args.listen_ip
 
-    asyncio.get_event_loop().create_task(main())
-    asyncio.get_event_loop().run_forever()
+	print("Nickname : "+nickname)
+	print("Relay host : "+relay_host)
+	print("Listen IP : "+listen_ip)
+
+	async def main():
+		c = Contributor(relay_host, listen_ip, nickname)
+		await c.start()
+
+	asyncio.get_event_loop().create_task(main())
+	asyncio.get_event_loop().run_forever()
