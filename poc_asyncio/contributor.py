@@ -59,7 +59,7 @@ class Contributor():
         await self.node.send(Event("worker_ready", {}), self.current_master)
 
     async def start(self):
-        requests.post("http://" + self.relay_address + ":8080", json=self.systemInfo)
+        requests.post("http://" + self.relay_address + ":8888", json=self.systemInfo)
 
     async def handle_deconnection(self, node_id):
         print("Disconnedted from master, available again")
@@ -92,15 +92,16 @@ class Contributor():
         self.systemInfo['cpu_core']=psutil.cpu_count(logical=False)
         self.systemInfo['cpu_thread']=psutil.cpu_count(logical=True)
         
-        cpu_frequency = psutil.cpu_freq()
+        cpu_frequency = ps
+    util.cpu_freq()
         self.systemInfo['cpu_max_freq_mghz']=cpu_frequency.current
         self.systemInfo['cpu_min_freq_mghz']=cpu_frequency.min
 
-        battery = psutil.sensors_battery()
-        self.systemInfo['battery_percentage']=round(battery.percent, 1)
+        #battery = psutil.sensors_battery()
+        #self.systemInfo['battery_percentage']=round(battery.percent, 1)
         #Par default, cette fonctionnalité est désactivé sur windows10, donc pas utilisé ici.
         #self.systemInfo['battery_time_left_hr']=round(battery.secsleft,2)
-        self.systemInfo['power_pluged']=battery.power_plugged
+        #self.systemInfo['power_pluged']=battery.power_plugged
         
         self.systemInfo['total_ram_gb']=round(psutil.virtual_memory().total/(1024.0 **3))
 

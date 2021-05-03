@@ -4,6 +4,7 @@ from event import Event
 import sys
 import requests
 import docker
+import argparse
 
 
 class User():
@@ -93,13 +94,18 @@ class User():
 
 if __name__ == "__main__":
 
-    relay_host = "127.0.0.1"
-    advertise_ip = ""
-    listen_ip = ""
-    if len(sys.argv) > 1:
-        relay_host = sys.argv[1] 
-        advertise_ip = sys.argv[2]
-        listen_ip = sys.argv[3]
+    parser = argparse.ArgumentParser(description='Master Information')
+    parser.add_argument('--advertise_ip', dest='advertise_ip', type=str,
+                        help='Public IP on which master is reacheable', default="", required=True)
+    parser.add_argument('--relay_host', dest='relay_host',
+                        type=str, help='IP of the relay host', default='127.0.0.1')
+    parser.add_argument('--listen_ip', dest='listen_ip',
+                        type=str, help='Listen IP', default="", required=True)
+
+    args = parser.parse_args()
+    relay_host = args.relay_host
+    advertise_ip = args.advertise_ip
+    listen_ip = args.listen_ip
 
     async def main():
         """
