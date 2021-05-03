@@ -1,10 +1,12 @@
 from contributor_node import ContributorNode
 import asyncio
+import argparse
 from event import Event
 import platform
 import psutil
 import sys
 import requests
+import docker
 
 
 class Contributor():
@@ -28,10 +30,27 @@ class Contributor():
             self.swarm_token = event.data["swarm_token"]
             self.network_name = event.data["network_name"]
             self.docker_name = event.data["docker_name"]
-
+            advertise_ip = event.data["advertise_ip"]
             # TODO
             # set-up docker and launch spark-woker
 
+            self.client.swarm.leave(force=True)
+            try:
+                self.client.containers.list(filters={"name": self.docker_name})[0].kill()
+            except:
+                print('nothing to kill')
+
+            self.client.swarm.join(remote_addrs=[self.node.nodes[event.sender].ip],
+                                   join_token=swarm_token, advertise_addr=advertise_ip, listen_addr=self.LISTEN_IP)
+            self.client.containers.run(image='bde2020/spark-worker:3.1.1-hadoop3.2',
+                                       detach=True,
+                                       name="spark-worker",
+                                       environment=["SPARK_PUBLIC_DNS=" + self.node.nodes[event.sender].ip],
+                ports={
+                                        8081: 8081
+                          },
+                hostname=self.docker_name,
+                network="spark-net")
             await self.send_worker_ready()
 
     async def send_worker_ready(self):
@@ -47,7 +66,7 @@ class Contributor():
 
     """Constructor for the contributor class"""
 
-    def __init__(self, relay_address: str):
+    def __init__(self, relay_address: str, listen_ip: str, nickname: str):
         self.node = ContributorNode()
         asyncio.create_task(self.node.start())
         self.working = False
@@ -57,9 +76,12 @@ class Contributor():
         self.relay_address = relay_address
         self.current_master = ""
         self.swarm_token = ""
-        self.network_name = ""
+        self.network_name = "spark-net"
         self.docker_name = ""
+        self.nickname = ""
         self.node.handle_deconnection = self.handle_deconnection
+        self.client = docker.from_env()
+        self.LISTEN_IP = listen_ip
 
     """getSystemInfo add cpu, ram and gpu specs to systemInfo"""
 
@@ -84,10 +106,22 @@ class Contributor():
 
 if __name__ == "__main__":
 
-    relay_host = "127.0.0.1"
+    parser = argparse.ArgumentParser(description='Worker Information')
+    parser.add_argument('--nickname', dest='nickname', type=str,
+                        help='Nickname of the future slav... euh worker sorry', default="")
+    parser.add_argument('--relay_host', dest='relay_host',
+                        type=str, help='IP of the relay host', default='127.0.0.1')
+    parser.add_argument('--listen_ip', dest='listen_ip',
+                        type=str, help='Listen IP', default="")
 
-    if len(sys.argv) > 1:
-        relay_host = sys.argv[1]
+    args = parser.parse_args()
+    relay_host = args.relay_host
+    nickname = args.nickname
+    listen_ip = args.listen_ip
+
+    print("Nickname : "+nickname)
+    print("Relay host : "+relay_host)
+    print("Listen IP : "+listen_ip)
 
     async def main():
         """
