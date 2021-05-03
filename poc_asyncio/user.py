@@ -97,7 +97,7 @@ if __name__ == "__main__":
     async def main():
         """
         """
-        u = User(relay_host)
+        u = User(relay_host, advertise_ip, listen_ip)
         await u.start()
 
     asyncio.get_event_loop().create_task(main())
