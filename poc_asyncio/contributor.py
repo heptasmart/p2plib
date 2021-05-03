@@ -52,7 +52,7 @@ class Contributor():
 
     async def start(self):
 
-        requests.post("http://" + self.relay_address + ":8080")
+        requests.post("http://" + self.relay_address + ":8888")
 
     async def handle_deconnection(self, node_id):
         print("Disconnedted from master, available again")
@@ -60,7 +60,7 @@ class Contributor():
 
     """Constructor for the contributor class"""
 
-    def __init__(self, relay_address: str, listen_ip:str)
+    def __init__(self, relay_address: str, listen_ip:str):
         self.node = ContributorNode()
         asyncio.create_task(self.node.start())
         self.working = False
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     async def main():
         """
         """
-        c = Contributor(relay_host)
+        c = Contributor(relay_host, listen_ip)
         await c.start()
 
     asyncio.get_event_loop().create_task(main())

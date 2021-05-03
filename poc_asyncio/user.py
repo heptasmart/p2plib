@@ -47,7 +47,7 @@ class User():
     async def start(self):
 
         contributors = requests.get(
-            "http://" + self.relay_address + ":8080").json()
+            "http://" + self.relay_address + ":8888").json()
         for node_id in contributors:
             await self.node.add_contributor(contributors[node_id]["ip"])
 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     async def main():
         """
         """
-        u = User(relay_host)
+        u = User(relay_host, advertise_ip, listen_ip)
         await u.start()
 
     asyncio.get_event_loop().create_task(main())
