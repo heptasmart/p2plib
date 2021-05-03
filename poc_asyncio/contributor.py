@@ -60,7 +60,7 @@ class Contributor():
 
     """Constructor for the contributor class"""
 
-    def __init__(self, relay_address: str, listen_ip:str)
+    def __init__(self, relay_address: str, listen_ip:str):
         self.node = ContributorNode()
         asyncio.create_task(self.node.start())
         self.working = False
