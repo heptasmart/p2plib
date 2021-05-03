@@ -1,5 +1,6 @@
 from contributor_node import ContributorNode
 import asyncio
+import argparse
 from event import Event
 try:
     import wmi
@@ -51,7 +52,7 @@ class Contributor():
 
     """Constructor for the contributor class"""
 
-    def __init__(self, relay_address: str):
+    def __init__(self, relay_address: str, nickname: str):
         self.node = ContributorNode()
         asyncio.create_task(self.node.start())
         self.working = False
@@ -63,6 +64,7 @@ class Contributor():
         self.swarm_token = ""
         self.network_name = ""
         self.docker_name = ""
+        self.nickname = ""
         self.node.handle_deconnection = self.handle_deconnection
 
     """getSystemInfo add cpu, ram and gpu specs to systemInfo"""
@@ -82,16 +84,19 @@ class Contributor():
 
 if __name__ == "__main__":
 
-    relay_host = "127.0.0.1"
+	parser = argparse.ArgumentParser(description='Worker Information')
+	parser.add_argument('--nickname', dest='nickname', type=str, help='Nickname of the future slav... euh worker sorry')
+	parser.add_argument('--relay_host', dest='relay_host', type=str, help='IP of the relay host', default='127.0.0.1')
+	args = parser.parse_args()
+	relay_host = args.relay_host
+	nickname = args.nickname
 
-    if len(sys.argv) > 1:
-        relay_host = sys.argv[1]
+	print("Nickname : "+nickname)
+	print("Relay host : "+relay_host)
 
-    async def main():
-        """
-        """
-        c = Contributor(relay_host)
-        await c.start()
+	async def main():
+		c = Contributor(relay_host, nickname)
+		await c.start()
 
-    asyncio.get_event_loop().create_task(main())
-    asyncio.get_event_loop().run_forever()
+	asyncio.get_event_loop().create_task(main())
+	asyncio.get_event_loop().run_forever()
